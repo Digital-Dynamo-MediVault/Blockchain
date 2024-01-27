@@ -31,6 +31,7 @@ contract MediVault1 {
 
     struct Case {
         uint pId;
+        uint cId;
         string specialization;
         string problemDescription;
         address doctor;
@@ -38,6 +39,15 @@ contract MediVault1 {
     }
 
     Case[] public cases;
+
+    struct Prescription {
+        uint pId;
+        uint cId;
+        address doctor;
+        string prescribed;
+    }
+
+    Prescription[] public prescribes;
 
     mapping(address => Patient) public patients;
 
@@ -75,22 +85,42 @@ contract MediVault1 {
         doctors[metamaskAddress] = newDoctor;
     }
 
-    mapping(address => mapping(uint => Case)) public doctorPatientCases;
+    mapping(address => mapping(uint => mapping(uint => Case))) public doctorPatientCases;
 
     function addCase(
         uint _pId, 
+        uint _cId,
         string memory _specialization, 
         string memory _problemDescription, 
         address _doctor, 
         string memory _symptoms
     ) public {
-        Case memory newCase = Case(_pId, _specialization, _problemDescription, _doctor, _symptoms);
+        Case memory newCase = Case(_pId, _cId, _specialization, _problemDescription, _doctor, _symptoms);
         cases.push(newCase);
-        doctorPatientCases[_doctor][_pId] = newCase;
+        doctorPatientCases[_doctor][_pId][_cId]= newCase;
     }
 
-    function getCase(uint pId, address doctorAddress) public view returns (uint, string memory, string memory, address, string memory) {
-        Case memory caseInfo = doctorPatientCases[doctorAddress][pId];
-        return (caseInfo.pId, caseInfo.specialization, caseInfo.problemDescription, caseInfo.doctor, caseInfo.symptoms);
+    function getCase(uint pId, uint cId, address doctorAddress) public view returns (uint, uint,string memory, string memory, address, string memory) {
+        Case memory caseInfo = doctorPatientCases[doctorAddress][pId][cId];
+        return (caseInfo.pId, caseInfo.cId, caseInfo.specialization, caseInfo.problemDescription, caseInfo.doctor, caseInfo.symptoms);
+    }
+
+    mapping(address => mapping(uint => mapping(uint => Prescription))) public doctorPatientPrescriptions;
+
+
+    function addPrescription(
+        uint pId,
+        uint cId,
+        address doctor,
+        string memory prescribed
+    ) public {
+        Prescription memory newPrescription = Prescription(pId, cId, doctor, prescribed);
+        prescribes.push(newPrescription);
+        doctorPatientPrescriptions[doctor][pId][cId] = newPrescription;
+    }
+
+    function getPrescription(uint pId, uint cId,address doctor) public view returns (uint, uint, address, string memory){
+        Prescription memory prescriptionInfo = doctorPatientPrescriptions[doctor][pId][cId];
+        return(prescriptionInfo.pId, prescriptionInfo.cId, prescriptionInfo.doctor, prescriptionInfo.prescribed);
     }
 }
