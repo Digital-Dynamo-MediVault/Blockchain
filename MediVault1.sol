@@ -9,6 +9,7 @@ contract MediVault1 {
         uint48 age;
         string gender;
         string email;
+        uint256 phone;
         string addressp;
         string bloodGroup;
         string guardian;
@@ -17,21 +18,26 @@ contract MediVault1 {
     }
 
     struct Doctor{
+        uint256 dId;
         string name;
         uint48 age;
         string gender;
         string email;
+        uint phone;
         uint48 experience;
         string specialization;
         address metamaskAddress;
     }
 
-    struct Hospital{
-        string name;
-        string addressh;
-        string email;
-        uint256 phoneno;
+    struct Case {
+        uint pId;
+        string specialization;
+        string problemDescription;
+        address doctor;
+        string symptoms;
     }
+
+    Case[] public cases;
 
     mapping(address => Patient) public patients;
 
@@ -41,70 +47,50 @@ contract MediVault1 {
         uint48 age, 
         string memory gender, 
         string memory email, 
+        uint256 phone,
         string memory addressp, 
         string memory bloodGroup, 
         string memory guardian,
         uint256 guardianp,
         address metamaskAddress
     ) public {
-        Patient memory newPatient = Patient(pId,name, age, gender, email, addressp, bloodGroup, guardian, guardianp, metamaskAddress);
+        Patient memory newPatient = Patient(pId,name, age, gender, email, phone,addressp, bloodGroup, guardian, guardianp, metamaskAddress);
         patients[metamaskAddress] = newPatient;
     }
 
     mapping(address => Doctor) public doctors;
 
     function addDoctor(
+        uint256 dId,
         string memory name, 
         uint48 age,
         string memory gender,
         string memory email, 
+        uint256 phone,
         uint48 experience, 
         string memory specialization, 
         address metamaskAddress
     ) public {
-        Doctor memory newDoctor = Doctor(name, age, gender,email, experience, specialization, metamaskAddress);
+        Doctor memory newDoctor = Doctor(dId,name, age, gender,email, phone, experience, specialization, metamaskAddress);
         doctors[metamaskAddress] = newDoctor;
     }
 
-    mapping(address => Hospital) public hospitals;
+    mapping(address => mapping(uint => Case)) public doctorPatientCases;
 
-    function addHospital(
-        string memory name, 
-        string memory addressh, 
-        string memory email, 
-        uint256 phoneno, 
-        address hospitalAddress
+    function addCase(
+        uint _pId, 
+        string memory _specialization, 
+        string memory _problemDescription, 
+        address _doctor, 
+        string memory _symptoms
     ) public {
-        Hospital memory newHospital = Hospital(name, addressh, email, phoneno);
-        hospitals[hospitalAddress] = newHospital;
+        Case memory newCase = Case(_pId, _specialization, _problemDescription, _doctor, _symptoms);
+        cases.push(newCase);
+        doctorPatientCases[_doctor][_pId] = newCase;
     }
 
-
-    struct Diagnosis {
-        string description;
-        address doctorAddress;
+    function getCase(uint pId, address doctorAddress) public view returns (uint, string memory, string memory, address, string memory) {
+        Case memory caseInfo = doctorPatientCases[doctorAddress][pId];
+        return (caseInfo.pId, caseInfo.specialization, caseInfo.problemDescription, caseInfo.doctor, caseInfo.symptoms);
     }
-
-    struct MedicalRecord {
-        Diagnosis[] diagnoses;
-        mapping(address => Diagnosis) doctorDiagnoses; 
-    }
-
-    MedicalRecord[] private medicalRecords; 
-
-    function getMedicalRecord(uint index) public view returns (Diagnosis[] memory) {
-        return medicalRecords[index].diagnoses;
-    }
-
-    function getDiagnosis(uint recordIndex, address doctorAddress) public view returns (string memory) {
-        return medicalRecords[recordIndex].doctorDiagnoses[doctorAddress].description;
-    }
-
-    function addDiagnosis(uint recordIndex, address doctorAddress, string memory description) public {
-        Diagnosis memory newDiagnosis = Diagnosis(description, doctorAddress);
-        medicalRecords[recordIndex].diagnoses.push(newDiagnosis);
-        medicalRecords[recordIndex].doctorDiagnoses[doctorAddress] = newDiagnosis;
-    }
-
-
 }
